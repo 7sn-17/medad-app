@@ -13,23 +13,14 @@ jobs:
     - name: Checkout Code Repository
       uses: actions/checkout@v4
 
-    - name: Set up Java JDK 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Setup Android SDK Environment
-      uses: android-actions/setup-android@v3
-
-    - name: Build Android APK Package
+    - name: Compress App Files to APK Package
       run: |
         mkdir -p build/outputs/apk/
-        echo "Building Medad Translator Official Package..."
-        zip -r build/outputs/apk/Medad-App-v1.0.apk . -x "*.git*"
+        echo "Building Medad Translator Package..."
+        zip -r build/outputs/apk/Medad-App-Official.apk . -x "*.git*"
 
     - name: Upload Medad APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Medad-App-Official-APK
-        path: build/outputs/apk/
+        path: build/outputs/apk/Medad-App-Official.apk
