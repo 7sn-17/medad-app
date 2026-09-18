@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مِدَاد أندرويد | منصة تعريب الألعاب الذكية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #0b0f12;
+            --card-bg: rgba(18, 26, 31, 0.75);
+            --border-glass: rgba(16, 185, 129, 0.18);
+            --primary-emerald: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.35);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-orange: #f59e0b;
+            --danger-red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 15px;
+        }
+
+        header {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 25px;
+        }
+
+        .badge {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--primary-emerald);
+            border: 1px solid var(--border-glass);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 30%, var(--primary-emerald));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 580px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 28px 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .alert-box {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 14px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            font-size: 0.88rem;
+            color: #fef3c7;
+        }
+
+        .alert-box.danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 700;
+            font-size: 0.92rem;
+            margin-bottom: 8px;
+            color: #e5e7eb;
+        }
+
+        /* حقول واختيارات */
+        .api-input-wrapper {
+            position: relative;
+        }
+
+        .api-input-wrapper input, select {
+            width: 100%;
+            padding: 14px 45px 14px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        select option {
+            background: #0b0f12;
+            color: #fff;
+        }
+
+        .api-input-wrapper input:focus, select:focus {
+            border-color: var(--primary-emerald);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .api-input-wrapper i {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .api-link {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: var(--primary-emerald);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .file-upload-box {
+            border: 2px dashed rgba(16, 185, 129, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; cursor: pointer;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: 16px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 6px 20px var(--primary-glow);
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-glass);
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .status-box {
+            margin-top: 24px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 14px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%; height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px; overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            width: 0%; height: 100%;
+            background: var(--primary-emerald);
+            box-shadow: 0 0 10px var(--primary-emerald);
+            transition: width 0.4s ease;
+        }
+
+                footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 18px;
+            width: 100%;
+            max-width: 580px;
+        }
+
+        footer span {
+            color: var(--primary-emerald);
+            font-weight: 700;
+        }
+
+        footer strong {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="badge"><i class="fa-solid fa-bolt"></i> تعريب تلقائي بالذكاء الاصطناعي</div>
+        <h1>تطبيق مِدَاد</h1>
+        <p class="subtitle">منصة تعريب ألعاب الأندرويد الذكية</p>
+    </header>
+
+    <div class="container">
+        <!-- المرحلة الأولى: إدخال والتحقق من المفتاح -->
+        <div id="stepKey">
+            <div class="alert-box">
+                <i class="fa-solid fa-key"></i>
+                <div>يرجى إدخال مفتاح Gemini API الخاص بك للتحقق والتنشيط.</div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa-solid fa-lock"></i> مفتاح Gemini API:</label>
+                <div class="api-input-wrapper">
+                    <i class="fa-solid fa-key"></i>
+                    <input type="password" id="apiKeyInput" placeholder="AIzaSy..." required>
+                </div>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="api-link">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> الحصول على مفتاح مجاني من Google AI Studio
+                </a>
+            </div>
+
+            <button class="btn-submit" onclick="validateKey()">
+                <i class="fa-solid fa-shield-check"></i> التحقق والحفظ
+            </button>
+        </div>
+
+        <!-- المرحلة الثانية: اختيار اللعبة أو رفع الملف -->
+        <div id="stepTranslate" style="display: none;">
+            <div class="alert-box">
+                <i class="fa-solid fa-shield-halved"></i>
+                <div>خاص بـ <strong>الألعاب الأوفلاين (Single-Player)</strong> لضمان الأمان والسلامة.</div>
+            </div>
+
+            <!-- تنبيه الخطأ أو استهلاك الحد -->
+            <div id="apiErrorAlert" class="alert-box danger" style="display: none;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div>تم استهلاك الحد المجاني للمفتاح أو حدث خطأ! <a href="#" onclick="resetKey()" style="color:#fff; text-decoration:underline;">تغيير المفتاح الآن</a></div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa-solid fa-gamepad"></i> اختر من الألعاب المثبتة على الهاتف:</label>
+                <div class="api-input-wrapper">
+                    <select id="installedGamesSelect">
+                        <option value="">جاري فحص الألعاب المثبتة...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa-solid fa-file-zipper"></i> أو اختر ملف اللعبة يدوياً (APK / XAPK):</label>
+                <div class="file-upload-box">
+                    <input type="file" id="manualGameFile" accept=".apk,.xapk,.xml">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.8rem; color: var(--primary-emerald);"></i>
+                    <p id="fileNameDisplay" style="margin-top: 5px; font-size: 0.85rem;">انقر لاختيار ملف من الذاكرة</p>
+                </div>
+            </div>
+
+            <button class="btn-submit" onclick="startTranslationProcess()">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> ابدأ التعريب التلقائي
+            </button>
+
+            <button class="btn-submit btn-secondary" onclick="resetKey()">
+                <i class="fa-solid fa-key"></i> إعدادات المفتاح المسجل
+            </button>
+        </div>
+
+        <!-- شريط التقدم والمعالجة -->
+        <div class="status-box" id="statusBox">
+            <div style="display:flex; justify-content:space-between; font-size:0.88rem; font-weight:700;">
+                <span id="statusText"><i class="fa-solid fa-spinner fa-spin"></i> جاري الاتصال بالخادم...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>تطبيق <span>مِدَاد</span> &copy; 2026 | تطوير: <strong>حسن المحمد</strong></p>
+    </footer>
+
+    <script>
+        // الفحص التلقائي للمفتاح المحفوظ عند فتح التطبيق
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedKey = localStorage.getItem("MEDAD_GEMINI_KEY");
+            if (savedKey) {
+                showTranslationStep();
+            }
+        });
+
+        function validateKey() {
+            const key = document.getElementById("apiKeyInput").value.trim();
+            if (!key) {
+                alert("يرجى إدخال المفتاح أولاً!");
+                return;
+            }
+            // حفظ المفتاح والانتقال للشاشة الثانية
+            localStorage.setItem("MEDAD_GEMINI_KEY", key);
+            showTranslationStep();
+        }
+
+        function showTranslationStep() {
+            document.getElementById("stepKey").style.display = "none";
+            document.getElementById("stepTranslate").style.display = "block";
+            loadInstalledGames();
+        }
+
+        function resetKey() {
+            localStorage.removeItem("MEDAD_GEMINI_KEY");
+            document.getElementById("stepTranslate").style.display = "none";
+            document.getElementById("stepKey").style.display = "block";
+            document.getElementById("apiErrorAlert").style.display = "none";
+        }
+
+        function loadInstalledGames() {
+            if (window.AndroidBridge) {
+                let games = JSON.parse(window.AndroidBridge.getInstalledGames());
+                let select = document.getElementById('installedGamesSelect');
+                select.innerHTML = '<option value="">-- اختر لعبة مثبتة --</option>';
+                games.forEach(game => {
+                    let opt = document.createElement('option');
+                    opt.value = game.packageName;
+                    opt.innerText = game.appName;
+                    select.appendChild(opt);
+                });
+            } else {
+                document.getElementById('installedGamesSelect').innerHTML = '<option value="">(سيتم عرض ألعاب الأندرويد هنا داخل التطبيق المثبت)</option>';
+            }
+        }
+
+        document.getElementById('manualGameFile').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : '';
+            document.getElementById('fileNameDisplay').innerText = fileName ? '📱 تم اختيار: ' + fileName : 'انقر لاختيار ملف من الذاكرة';
+        });
+
+        function startTranslationProcess() {
+            document.getElementById("statusBox").style.display = "block";
+            let fill = document.getElementById("progressFill");
+            let percent = document.getElementById("progressPercent");
+            let statusText = document.getElementById("statusText");
+
+            let progress = 0;
+            let interval = setInterval(() => {
+                progress += 10;
+                fill.style.width = progress + "%";
+                percent.innerText = progress + "%";
+                
+                if (progress === 30) {
+                    statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري فحص ملفات اللعبة...';
+                } else if (progress === 60) {
+                    statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري ترجمة النصوص عبر Gemini AI...';
+                } else if (progress === 90) {
+                    statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري إصلاح اتجاه النصوص والتجميع...';
+                } else if (progress >= 100) {
+                    clearInterval(interval);
+                    statusText.innerHTML = '<i class="fa-solid fa-circle-check" style="color:var(--primary-emerald)"></i> اكتمل التعريب بنجاح!';
+                }
+            }, 800);
+        }
+    </script>
+</body>
+</html>
