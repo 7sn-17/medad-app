@@ -19,46 +19,39 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Setup Android SDK Tools
-      uses: android-actions/setup-android@v3
-
-    - name: Accept Android SDK Licenses
-      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-    - name: Compile Resources and Build Real Signed APK
+    - name: Build Signed Android APK
       run: |
+        # 1. إنشاء مجلدات العمل الأساسية والموارد
         mkdir -p build/gen build/obj build/apk res/drawable res/values
         
-        # تجهيز أيقونة التطبيق والاسم العربي
+        # 2. تعيين أيقونة التطبيق والاسم العربي
         if [ -f "icon.png" ]; then
           cp icon.png res/drawable/icon.png
         fi
         
         echo '<resources><string name="app_name">مِدَاد</string></resources>' > res/values/strings.xml
 
-        # تحديد مسار أدوات أندرويد
-        BUILD_TOOLS=$(find $ANDROID_HOME/build-tools -minversion 30.0.0 | tail -n 1)
-        PLATFORM=$ANDROID_HOME/platforms/android-33/android.jar
-        if [ ! -f "$PLATFORM" ]; then
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;33.0.2"
-          PLATFORM=$ANDROID_HOME/platforms/android-33/android.jar
-          BUILD_TOOLS=$ANDROID_HOME/build-tools/33.0.2
-        fi
+        # 3. إعداد واستخراج مسارات Android SDK المدمجة تلقائياً
+        SDK_PATH=$ANDROID_HOME
+        BUILD_TOOLS=$(find $SDK_PATH/build-tools -maxdepth 1 -mindepth 1 | sort -V | tail -n 1)
+        PLATFORM=$(find $SDK_PATH/platforms -name "android-*" | sort -V | tail -n 1)/android.jar
 
-        # 1. تجميع الموارد والـ Manifest باستخدام AAPT2
+        echo "Using Build Tools from: $BUILD_TOOLS"
+        echo "Using Platform Jar from: $PLATFORM"
+
+        # 4. تجميع الموارد والـ AndroidManifest باستخدام AAPT2
         $BUILD_TOOLS/aapt2 compile --dir res -o build/resources.zip
         $BUILD_TOOLS/aapt2 link -o build/unaligned.apk -I $PLATFORM --manifest AndroidManifest.xml build/resources.zip --java build/gen
 
-        # 2. إضافة ملفات HTML/JS الخاصة بتطبيق مِدَاد داخل الأصول (assets)
+        # 5. حزم ملفات التطبيق (index.html و engine.py)
         mkdir -p build/assets
         cp index.html build/assets/ 2>/dev/null || true
         cp engine.py build/assets/ 2>/dev/null || true
         cd build/assets && zip -r ../unaligned.apk ./* && cd ../..
 
-        # 3. محاذاة الملف (zipalign)
+        # 6. محاذاة وتوقيع حزمة APK لتكون حزمة رسمية قابلة للتثبيت
         $BUILD_TOOLS/zipalign -v 4 build/unaligned.apk build/apk/Medad-App-Official.apk
 
-        # 4. إنشاء مفتاح وتوقيع الـ APK لتثبيته بنجاح على أجهزة الأندرويد
         keytool -genkeypair -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Medad,OU=Dev,O=Medad,L=City,S=State,C=US"
         $BUILD_TOOLS/apksigner sign --ks debug.keystore --ks-pass pass:android build/apk/Medad-App-Official.apk
 
