@@ -31,25 +31,28 @@ jobs:
         
         echo '<resources><string name="app_name">مِدَاد</string></resources>' > res/values/strings.xml
 
-        # 3. إعداد واستخراج مسارات Android SDK المدمجة تلقائياً
+        # 3. تحديد مسارات Android SDK بدقة (تجنب ملفات stubs)
         SDK_PATH=$ANDROID_HOME
         BUILD_TOOLS=$(find $SDK_PATH/build-tools -maxdepth 1 -mindepth 1 | sort -V | tail -n 1)
-        PLATFORM=$(find $SDK_PATH/platforms -name "android-*" | sort -V | tail -n 1)/android.jar
+        PLATFORM=$(find $SDK_PATH/platforms -maxdepth 2 -name "android.jar" ! -path "*stubs*" | sort -V | tail -n 1)
 
         echo "Using Build Tools from: $BUILD_TOOLS"
         echo "Using Platform Jar from: $PLATFORM"
 
         # 4. تجميع الموارد والـ AndroidManifest باستخدام AAPT2
         $BUILD_TOOLS/aapt2 compile --dir res -o build/resources.zip
-        $BUILD_TOOLS/aapt2 link -o build/unaligned.apk -I $PLATFORM --manifest AndroidManifest.xml build/resources.zip --java build/gen
+        $BUILD_TOOLS/aapt2 link -o build/unaligned.apk -I "$PLATFORM" --manifest AndroidManifest.xml build/resources.zip --java build/gen
 
-        # 5. حزم ملفات التطبيق (index.html و engine.py)
+        # 5. حزم ملفات الويب داخل الـ APK
         mkdir -p build/assets
         cp index.html build/assets/ 2>/dev/null || true
         cp engine.py build/assets/ 2>/dev/null || true
-        cd build/assets && zip -r ../unaligned.apk ./* && cd ../..
+        
+        if [ -d "build/assets" ] && [ "$(ls -A build/assets)" ]; then
+          cd build/assets && zip -r ../unaligned.apk ./* && cd ../..
+        fi
 
-        # 6. محاذاة وتوقيع حزمة APK لتكون حزمة رسمية قابلة للتثبيت
+        # 6. محاذاة وتوقيع حزمة APK
         $BUILD_TOOLS/zipalign -v 4 build/unaligned.apk build/apk/Medad-App-Official.apk
 
         keytool -genkeypair -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Medad,OU=Dev,O=Medad,L=City,S=State,C=US"
