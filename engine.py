@@ -1,108 +1,78 @@
 import os
 import sys
 import json
-import xml.etree.ElementTree as ET
-import google.generativeai as genai
-import arabic_reshaper
-from bidi.algorithm import get_display
+import zipfile
+import re
+import urllib.request
+import urllib.error
 
-class MedadEngine:
-    def __init__(self, api_key: str):
-        self.api_key = api_key.strip()
-        self.model = None
+# محرك تعريب ألعاب الأندرويد التلقائي (مِدَاد Engine v2.0)
 
-    def validate_api_key(self) -> bool:
-        """فحص مفتاح Gemini API والتأكد من فعاليته قبل بدء أي عملية"""
-        try:
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-2.5-flash')
-            response = self.model.generate_content("Ping")
-            if response and response.text:
-                print("SUCCESS: مفتاح Gemini API يعمل بنجاح.")
-                return True
-        except Exception as e:
-            print(f"ERROR: مفتاح Gemini API غير صالح أو معطل: {e}")
-            return False
-        return False
+def translate_text_with_gemini(text, api_key):
+    """إرسال النصوص إلى Gemini API مع حماية وتوجيهات تعريب دقيقة"""
+    if not text.strip():
+        return text
+        
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    headers = {'Content-Type': 'application/json'}
+    
+    prompt = (
+        "You are an expert game translator. Translate the following text into natural, fluent Arabic. "
+        "Keep placeholders, code symbols, variables (like %s, {0}, \\n), and brackets intact. "
+        "Return ONLY the direct translated string without quotes or extra text:\n\n" + text
+    )
+    
+    data = {
+        "contents": [{
+            "parts": [{"text": prompt}]
+        }]
+    }
+    
+    try:
+        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers)
+        with urllib.request.urlopen(req) as response:
+            res = json.loads(response.read().decode('utf-8'))
+            return res['candidates'][0]['content']['parts'][0]['text'].strip()
+    except Exception as e:
+        print(f"[Warning] Translation failed for text: {text}. Error: {e}")
+        return text
 
-    def reshape_arabic(self, text: str) -> str:
-        """تشكيل الحروف العربية وتصحيح الاتجاه (RTL Fix) للألعاب"""
-        if not text or not isinstance(text, str):
-            return text
-        try:
-            reshaped = arabic_reshaper.reshape(text)
-            return get_display(reshaped)
-        except Exception:
-            return text
+def process_xml_strings(file_path, api_key):
+    """استخراج وترجمة النصوص داخل ملفات XML الخاص بـ Android Resources"""
+    print(f"[*] Processing XML file: {file_path}")
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
 
-    def translate_batch(self, text_list: list) -> dict:
-        """ترجمة نصوص اللعبة عبر Gemini مع حماية المتغيرات البرمجية والرموز"""
-        prompt = f"""
-        أنت مترجم محترف ألعاب أندرويد. قم بترجمة النصوص التالية إلى اللغة العربية.
-        قواعد حارمة:
-        1. احتفظ بنفس الرموز والمتغيرات مثل (%s, %d, %1$s, {{0}}, \\n) كما هي بدون أي تغيير.
-        2. لا تترجم الكلمات البرمجية أو المعرفات.
-        3. أرجع النتيجة حصراً بصيغة JSON: {{"النص الأصلي": "الترجمة العربية"}}
+    # البحث عن عناصر <string name="...">Text</string>
+    pattern = re.compile(r'<string name="([^"]+)">([^<]+)</string>')
+    
+    def replacer(match):
+        name = match.group(1)
+        original_text = match.group(2)
+        translated = translate_text_with_gemini(original_text, api_key)
+        return f'<string name="{name}">{translated}</string>'
 
-        النصوص المراد ترجمتها:
-        {json.dumps(text_list, ensure_ascii=False)}
-        """
-        try:
-            response = self.model.generate_content(
-                prompt,
-                generation_config={"response_mime_type": "application/json"}
-            )
-            return json.loads(response.text)
-        except Exception as e:
-            print(f"WARNING: حدث خطأ أثناء ترجمة هذه الدفعة: {e}")
-            return {}
-
-    def process_strings_file(self, input_path: str, output_path: str):
-        if not os.path.exists(input_path):
-            print(f"ERROR: لم يتم العثور على ملف النصوص: {input_path}")
-            sys.exit(1)
-
-        print("INFO: تفكيك وقراءة ملف النصوص...")
-        tree = ET.parse(input_path)
-        root = tree.getroot()
-
-        original_texts = []
-        elements_map = []
-
-        for elem in root.findall('string'):
-            if elem.text and not elem.text.startswith("http") and len(elem.text.strip()) > 0:
-                original_texts.append(elem.text)
-                elements_map.append(elem)
-
-        if not original_texts:
-            print("INFO: لا توجد نصوص بداخل الملف تحتاج للترجمة.")
-            return
-
-        print(f"INFO: معالجة وترجمة {len(original_texts)} نص على دفعات...")
-        batch_size = 30
-        translations = {}
-        for i in range(0, len(original_texts), batch_size):
-            batch = original_texts[i:i + batch_size]
-            result = self.translate_batch(batch)
-            translations.update(result)
-
-        for elem in elements_map:
-            orig = elem.text
-            if orig in translations:
-                elem.text = self.reshape_arabic(translations[orig])
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        tree.write(output_path, encoding='utf-8', xml_declaration=True)
-        print(f"SUCCESS: تم تعريب الملف بنجاح وتشكيل الخط العربي في: {output_path}")
+    new_content = pattern.sub(replacer, content)
+    
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(new_content)
+    print(f"[✓] Successfully translated: {file_path}")
 
 if __name__ == "__main__":
-    api_key_input = os.getenv("GEMINI_API_KEY", "")
-    input_file = os.getenv("TARGET_FILE", "input/strings.xml")
-    output_file = os.getenv("OUTPUT_FILE", "output/strings.xml")
-
-    engine = MedadEngine(api_key=api_key_input)
-
-    if not engine.validate_api_key():
+    print("=== Medad Translation Engine Started ===")
+    api_key = os.getenv("GEMINI_API_KEY", "")
+    
+    if not api_key:
+        print("[!] Error: GEMINI_API_KEY is missing!")
         sys.exit(1)
-
-    engine.process_strings_file(input_file, output_file)
+        
+    target_dir = sys.argv[1] if len(sys.argv) > 1 else "."
+    
+    for root, dirs, files in os.walk(target_dir):
+        for file in files:
+            if file.endswith(".xml") and "strings" in file:
+                full_path = os.path.join(root, file)
+                process_xml_strings(full_path, api_key)
+                
+    print("=== Translation Complete ===")
