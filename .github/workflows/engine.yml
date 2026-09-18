@@ -1,0 +1,44 @@
+name: Medad Engine Cloud Processor
+
+on:
+  workflow_dispatch:
+    inputs:
+      gemini_key:
+        description: 'Gemini API Key'
+        required: true
+      target_file:
+        description: 'Target File Path'
+        required: true
+        default: 'input/strings.xml'
+
+jobs:
+  translate-process:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install google-generativeai arabic-reshaper python-bidi
+
+    - name: Run Medad Engine
+      env:
+        GEMINI_API_KEY: ${{ github.event.inputs.gemini_key }}
+        TARGET_FILE: ${{ github.event.inputs.target_file }}
+        OUTPUT_FILE: 'output/strings.xml'
+      run: |
+        python engine.py
+
+    - name: Upload Processed Game File
+      uses: actions/upload-artifact@v3
+      with:
+        name: Medad-Translated-Files
+        path: output/
