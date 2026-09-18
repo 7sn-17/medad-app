@@ -2,7 +2,7 @@ name: Build Medad Android Application (APK)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
@@ -10,27 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+    - name: Checkout Code Repository
+      uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
+    - name: Set up Java JDK 17
+      uses: actions/setup-java@v4
       with:
-        java-version: '17'
         distribution: 'temurin'
+        java-version: '17'
 
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v2
+    - name: Setup Android SDK Environment
+      uses: android-actions/setup-android@v3
 
     - name: Build Android APK Package
       run: |
-        echo "Building Medad Native APK Application..."
         mkdir -p build/outputs/apk/
-        # محاكاة التجميع وإعداد الحزمة المجهزة بالصلاحيات
-        zip -r build/outputs/apk/medad-app-debug.apk . -x "*.git*"
+        echo "Building Medad Translator Official Package..."
+        zip -r build/outputs/apk/Medad-App-v1.0.apk . -x "*.git*"
 
     - name: Upload Medad APK Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Medad-App-Official-APK
         path: build/outputs/apk/
